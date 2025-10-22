@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Довідник порогових концентрацій бойових отруйних речовин (рівні небезпечного впливу БОР: AEGL1,AEGL2,AEGL3)</title>
+    <style>
+        /* ------------------------------------- */
+        /* БАЗОВІ СТИЛІ ТА АДАПТИВНІСТЬ (CSS) */
+        /* ------------------------------------- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px; 
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #007bff;
+            text-align: center;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 1.5em;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1em;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            font-size: 1em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23007bff%22%20d%3D%22M287%20198.8H5.4c-7.7%200-11.7-9.2-6.1-14.8L140.2%206.1c5.6-5.6%2014.8-5.6%2020.4%200l140.9%20177.8c5.6%205.6%201.6%2014.9-6.1%2014.9z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 10px;
+            padding-right: 30px;
+        }
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        @media (min-width: 600px) {
+            .controls-grid {
+                grid-template-columns: 1fr 1fr; /* 2 колонки на великих екранах */
+            }
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column; 
+            gap: 10px;
+            grid-column: 1 / -1; /* Кнопки займають всю ширину */
+        }
+        @media (min-width: 500px) {
+            .button-group {
+                flex-direction: row;
+            }
+        }
+        .button-group button {
+            flex-grow: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* ------------------------------------- */
+        /* СТИЛІ РЕЗУЛЬТАТУ */
+        /* ------------------------------------- */
+        #load-btn { background-color: #28a745; color: white; }
+        #clear-btn { background-color: #dc3545; color: white; }
+        
+        .result {
+            margin-top: 30px;
+            padding: 15px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            background-color: #e6f2ff;
+            display: none;
+            overflow-x: auto; 
+        }
+        .result h3 {
+            color: #004d99;
+            margin-top: 0;
+            border-bottom: 1px dashed #007bff;
+            padding-bottom: 5px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            min-width: 600px;
+            border-collapse: collapse;
+            margin: 15px 0;
+            text-align: center;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px 5px; 
+            font-size: 0.9em;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .concentration-cell {
+            font-weight: bold;
+        }
+        /* Кольори фону для рівнів AEGL */
+        .aegl1-bg { background-color: #d1e7dd; color: #0f5132; } /* Зелений - мінімальний ризик */
+        .aegl2-bg { background-color: #fff3cd; color: #664d03; } /* Жовтий - серйозний ризик */
+        .aegl3-bg { background-color: #f8d7da; color: #842029; } /* Червоний - життєва небезпека */
+        
+        .time-cell {
+            background-color: #cceeff;
+            font-weight: 500;
+        }
+        .not-recommended {
+            background-color: #e9ecef;
+            color: #6c757d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>☣️ Довідник порогових концентрацій бойових отруйних речовин (рівні небезпечного впливу БОР: AEGL1,AEGL2,AEGL3)</h2>
+
+    <div class="controls-grid">
+        <div>
+            <label for="chemical-select">1. Оберіть бойову отруйну речовину:</label>
+            <select id="chemical-select"></select>
+        </div>
+        <div>
+            <label for="aegl-level-select">2. Оберіть рівень AEGL:</label>
+            <select id="aegl-level-select">
+                <option value="AEGL1" selected>AEGL-1 (Порогові ознаки отруєння)</option>
+                <option value="AEGL2">AEGL-2 (Середні наслідки отруєння)</option>
+                <option value="AEGL3">AEGL-3 (Важкі наслідки отруєння/Смерть)</option>
+            </select>
+        </div>
+        <div class="button-group">
+            <button id="load-btn" onclick="loadAEGLData()">ЗАВАНТАЖИТИ ДАНІ</button>
+            <button id="clear-btn" onclick="clearForm()">ОЧИСТИТИ</button>
+        </div>
+    </div>
+
+    <div class="result" id="result-output">
+        <h3 id="result-title"></h3>
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="5" id="aegl-description-header"></th>
+                </tr>
+                <tr>
+                    <th>10 хв</th>
+                    <th>30 хв</th>
+                    <th>60 хв</th>
+                    <th>4 год (240 хв)</th>
+                    <th>8 год (480 хв)</th>
+                </tr>
+            </thead>
+            <tbody id="aegl-table-body">
+                <tr id="concentration-row"></tr>
+                <tr id="time-row"></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    /* ---------------------------------------------------- */
+    /* МАТРИЦЯ ДАНИХ (ВИПРАВЛЕНО ТА ОНОВЛЕНО) */
+    /* ---------------------------------------------------- */
+    
+    // Використовується для позначення "Не рекомендовано" (NR)
+    const NR_DATA = [ 
+        { time: 10, conc: NaN }, 
+        { time: 30, conc: NaN }, 
+        { time: 60, conc: NaN }, 
+        { time: 240, conc: NaN }, 
+        { time: 480, conc: NaN } 
+    ];
+
+    const AEGL_DATA = {
+        "Зарін (GB)": {
+            "AEGL1": [ { time: 10, conc: 0.0069 }, { time: 30, conc: 0.0040 }, { time: 60, conc: 0.0028 }, { time: 240, conc: 0.0014 }, { time: 480, conc: 0.0010 } ],
+            "AEGL2": [ { time: 10, conc: 0.087 }, { time: 30, conc: 0.050 }, { time: 60, conc: 0.035 }, { time: 240, conc: 0.017 }, { time: 480, conc: 0.013 } ],
+            "AEGL3": [ { time: 10, conc: 0.38 }, { time: 30, conc: 0.19 }, { time: 60, conc: 0.13 }, { time: 240, conc: 0.070 }, { time: 480, conc: 0.051 } ]
+        },
+        "Зоман (GD)": {
+            "AEGL1": [ { time: 10, conc: 0.0035 }, { time: 30, conc: 0.0020 }, { time: 60, conc: 0.0014 }, { time: 240, conc: 0.00070 }, { time: 480, conc: 0.00050 } ],
+            "AEGL2": [ { time: 10, conc: 0.044 }, { time: 30, conc: 0.025 }, { time: 60, conc: 0.018 }, { time: 240, conc: 0.0085 }, { time: 480, conc: 0.0065 } ],
+            "AEGL3": [ { time: 10, conc: 0.38 }, { time: 30, conc: 0.19 }, { time: 60, conc: 0.13 }, { time: 240, conc: 0.070 }, { time: 480, conc: 0.051 } ]
+        },
+        "VX-газ": {
+            "AEGL1": [ { time: 10, conc: 0.00057 }, { time: 30, conc: 0.00033 }, { time: 60, conc: 0.00017 }, { time: 240, conc: 0.00010 }, { time: 480, conc: 0.000071 } ],
+            "AEGL2": [ { time: 10, conc: 0.0072 }, { time: 30, conc: 0.0042 }, { time: 60, conc: 0.0029 }, { time: 240, conc: 0.0015 }, { time: 480, conc: 0.0010 } ],
+            "AEGL3": [ { time: 10, conc: 0.029 }, { time: 30, conc: 0.015 }, { time: 60, conc: 0.010 }, { time: 240, conc: 0.0052 }, { time: 480, conc: 0.0038 } ]
+        },
+        // --- ОНОВЛЕНО ---
+        "Фосген (CG)": {
+            "AEGL1": NR_DATA, // Не рекомендовано (NR)
+            "AEGL2": [ { time: 10, conc: 2.43 }, { time: 30, conc: 2.43 }, { time: 60, conc: 1.21 }, { time: 240, conc: 0.32 }, { time: 480, conc: 0.16 } ],
+            "AEGL3": [ { time: 10, conc: 14.57 }, { time: 30, conc: 6.07 }, { time: 60, conc: 3.03 }, { time: 240, conc: 0.81 }, { time: 480, conc: 0.36 } ]
+        },
+        // --- ОНОВЛЕНО ---
+        "Синильна кислота (HCN)": {
+            "AEGL1": [ { time: 10, conc: 2.76 }, { time: 30, conc: 2.76 }, { time: 60, conc: 2.21 }, { time: 240, conc: 1.4 }, { time: 480, conc: 1.11 } ],
+            "AEGL2": [ { time: 10, conc: 18.78 }, { time: 30, conc: 11.05 }, { time: 60, conc: 7.85 }, { time: 240, conc: 3.87 }, { time: 480, conc: 2.76 } ],
+            "AEGL3": [ { time: 10, conc: 29.84 }, { time: 30, conc: 23.21 }, { time: 60, conc: 16.76 }, { time: 240, conc: 9.50 }, { time: 480, conc: 7.29 } ]
+        },
+        // --- ОНОВЛЕНО (ПРИБРАНО "СІРЧАНИЙ") ---
+        "Іприт (HD)": {
+            "AEGL1": [ { time: 10, conc: 0.40 }, { time: 30, conc: 0.13 }, { time: 60, conc: 0.067 }, { time: 240, conc: 0.017 }, { time: 480, conc: 0.0083 } ],
+            "AEGL2": [ { time: 10, conc: 0.60 }, { time: 30, conc: 0.20 }, { time: 60, conc: 0.10 }, { time: 240, conc: 0.025 }, { time: 480, conc: 0.013 } ],
+            "AEGL3": [ { time: 10, conc: 3.9 }, { time: 30, conc: 2.7 }, { time: 60, conc: 2.1 }, { time: 240, conc: 0.53 }, { time: 480, conc: 0.27 } ]
+        },
+        // --- ОНОВЛЕНО ---
+        "Адамсіт (DM)": {
+            "AEGL1": [ { time: 10, conc: 0.20 }, { time: 30, conc: 0.041 }, { time: 60, conc: 0.016 }, { time: 240, conc: 0.0022 }, { time: 480, conc: 0.00083 } ],
+            "AEGL2": [ { time: 10, conc: 9.7 }, { time: 30, conc: 6.8 }, { time: 60, conc: 2.6 }, { time: 240, conc: 0.36 }, { time: 480, conc: 0.14 } ],
+            "AEGL3": [ { time: 10, conc: 21.0 }, { time: 30, conc: 17.0 }, { time: 60, conc: 6.4 }, { time: 240, conc: 0.91 }, { time: 480, conc: 0.34 } ]
+        }
+    };
+
+    const AEGL_DESCRIPTIONS = {
+        "AEGL1": "AEGL-1: Порогова концентрація, що викликає помірний дискомфорт (зворотні ефекти)",
+        "AEGL2": "AEGL-2: Порогова концентрація, що викликає серйозні наслідки або недієздатність",
+        "AEGL3": "AEGL-3: Порогова концентрація, що створює загрозу життю або смерть"
+    };
+
+    /**
+     * Конвертує загальну кількість хвилин у формат "ГГ год ММ хв".
+     */
+    function convertMinutesToHms(totalMinutes) {
+        let hours = Math.floor(totalMinutes / 60);
+        let minutes = totalMinutes % 60;
+        
+        let result = [];
+        if (hours > 0) result.push(`${hours} год`);
+        if (minutes > 0 || (hours === 0 && totalMinutes === 0)) result.push(`${minutes} хв`);
+        
+        return result.join(' ');
+    }
+
+    // Ініціалізація випадаючого списку при завантаженні
+    function populateChemicalSelect() {
+        const selectElement = document.getElementById('chemical-select');
+        selectElement.innerHTML = '';
+        
+        const defaultOption = document.createElement('option');
+        defaultOption.value = "";
+        defaultOption.textContent = "--- Оберіть речовину ---";
+        selectElement.appendChild(defaultOption);
+
+        const sortedKeys = Object.keys(AEGL_DATA).sort();
+        sortedKeys.forEach(name => {
+            const option = document.createElement('option');
+            option.value = name;
+            option.textContent = name;
+            selectElement.appendChild(option);
+        });
+    }
+
+    // ОСНОВНА ФУНКЦІЯ: ЗАВАНТАЖЕННЯ ДАНИХ
+    function loadAEGLData() {
+        const chemicalName = document.getElementById('chemical-select').value;
+        const aeglLevel = document.getElementById('aegl-level-select').value;
+        const resultOutput = document.getElementById('result-output');
+        const concentrationRow = document.getElementById('concentration-row');
+        const timeRow = document.getElementById('time-row');
+
+        if (!chemicalName) {
+            alert("Будь ласка, оберіть отруйну речовину.");
+            resultOutput.style.display = 'none';
+            return;
+        }
+
+        const data = AEGL_DATA[chemicalName][aeglLevel];
+
+        // Очищення та встановлення заголовків
+        concentrationRow.innerHTML = '';
+        timeRow.innerHTML = '';
+        document.getElementById('result-title').textContent = `Порогові показники ${aeglLevel} для ${chemicalName}`;
+        document.getElementById('aegl-description-header').textContent = AEGL_DESCRIPTIONS[aeglLevel];
+        
+        // Встановлення кольору фону для таблиці
+        const resultTableBody = document.getElementById('aegl-table-body');
+        resultTableBody.className = ''; 
+        resultTableBody.classList.add(`${aeglLevel.toLowerCase()}-bg`);
+
+
+        data.forEach(item => {
+            const concCell = document.createElement('td');
+            const timeCell = document.createElement('td');
+            
+            // Якщо дані відсутні/не рекомендовані (NaN)
+            if (isNaN(item.conc)) {
+                concCell.textContent = 'NR';
+                concCell.classList.add('not-recommended');
+                timeCell.textContent = convertMinutesToHms(item.time);
+                timeCell.classList.add('time-cell');
+            } else {
+                // Визначаємо точність відображення
+                let precision = 4; // Стандартна точність
+                if (chemicalName.includes('VX')) {
+                     precision = 6;
+                } else if (item.conc >= 1) {
+                     precision = 2; // Менша точність для високих концентрацій
+                } else if (item.conc < 0.01) {
+                     precision = 6; // Більша точність для малих концентрацій
+                }
+                
+                // Додавання концентрації
+                concCell.classList.add('concentration-cell');
+                concCell.textContent = `${item.conc.toFixed(precision).replace(/\.?0+$/, '')} мг/м³`; 
+                
+                // Додавання часу (конвертованого)
+                timeCell.classList.add('time-cell');
+                timeCell.textContent = convertMinutesToHms(item.time);
+            }
+            
+            concentrationRow.appendChild(concCell);
+            timeRow.appendChild(timeCell);
+        });
+
+        resultOutput.style.display = 'block';
+    }
+
+    // ФУНКЦІЯ ОЧИЩЕННЯ
+    function clearForm() {
+        document.getElementById('chemical-select').value = "";
+        document.getElementById('aegl-level-select').value = "AEGL1";
+        document.getElementById('result-output').style.display = 'none';
+        document.getElementById('concentration-row').innerHTML = '';
+        document.getElementById('time-row').innerHTML = '';
+        document.getElementById('aegl-table-body').className = '';
+    }
+
+    // Ініціалізація даних при завантаженні сторінки
+    window.onload = populateChemicalSelect;
+</script>
+
+</body>
+</html>
