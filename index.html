@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Рівні небезпечного впливу бойових отруйних речовин: AEGL1,AEGL2,AEGL3 
-        (розраховані залежно від концентрації БОР у повітрі та визначеного часу знаходження людини у забрудненій зоні без ЗІЗ)</title>
+    <title>Рівні небезпечного впливу бойових отруйних речовин: AEGL1, AEGL2, AEGL3</title>
     <style>
         /* ------------------------------------- */
         /* БАЗОВІ СТИЛІ ТА АДАПТИВНІСТЬ (CSS) */
@@ -90,11 +89,59 @@
         }
 
         /* ------------------------------------- */
-        /* СТИЛІ РЕЗУЛЬТАТУ */
+        /* СТИЛІ КНОПОК ТА СЕКЦІЇ ІНСТРУКЦІЇ */
         /* ------------------------------------- */
         #load-btn { background-color: #28a745; color: white; }
         #clear-btn { background-color: #dc3545; color: white; }
-        
+        #manual-btn { 
+            background-color: #ffc107; 
+            color: #333; 
+        }
+        #manual-btn:hover {
+            background-color: #e0a800;
+        }
+
+        /* Стилі для блоку інструкції */
+        .manual-section {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            background-color: #fff8e1;
+            display: none; /* Спочатку прихований */
+        }
+        .manual-section h3 {
+            color: #856404;
+            border-bottom: 1px dashed #ffc107;
+            padding-bottom: 10px;
+        }
+        .manual-section ol {
+            padding-left: 20px;
+        }
+        .manual-section li {
+            margin-bottom: 8px;
+        }
+        /* Стилі для кнопки Завантаження */
+        #download-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #download-btn:hover {
+            background-color: #138496;
+        }
+
+        /* ------------------------------------- */
+        /* СТИЛІ РЕЗУЛЬТАТУ */
+        /* ------------------------------------- */
         .result {
             margin-top: 30px;
             padding: 15px;
@@ -150,7 +197,7 @@
 <body>
 
 <div class="container">
-    <h2>☣️ Рівні небезпечного впливу бойових отруйних речовин: AEGL1,AEGL2,AEGL3 
+    <h2>☣️ Рівні небезпечного впливу бойових отруйних речовин: AEGL1, AEGL2, AEGL3
         (розраховані залежно від концентрації БОР у повітрі та визначеного часу знаходження людини у забрудненій зоні без ЗІЗ)</h2>
 
     <div class="controls-grid">
@@ -168,10 +215,24 @@
         </div>
         <div class="button-group">
             <button id="load-btn" onclick="loadAEGLData()">ЗАВАНТАЖИТИ ДАНІ</button>
+            <button id="manual-btn" onclick="toggleManual()">ІНСТРУКЦІЯ</button>
             <button id="clear-btn" onclick="clearForm()">ОЧИСТИТИ</button>
         </div>
     </div>
 
+    <div class="manual-section" id="manual-section">
+        <h3>📖 Інструкція користування</h3>
+        <ol>
+            <li>**Оберіть Речовину:** У першому випадаючому списку виберіть потрібну отруйну речовину (наприклад, Синильна кислота).</li>
+            <li>**Оберіть Рівень AEGL:** Виберіть рівень загрози (AEGL-1, AEGL-2 або AEGL-3), дані для якого ви хочете отримати.</li>
+            <li>**Завантажте Дані:** Натисніть кнопку **"ЗАВАНТАЖИТИ ДАНІ"**.</li>
+            <li>**Аналіз Результату:** Програма відобразить таблицю з пороговими концентраціями (мг/м^3) для обраного рівня та часових інтервалів. Зверніть увагу, що для Фосгену (CG) рівень AEGL-1 не рекомендований (NR).</li>
+            <li>**Очищення:** Кнопка **"ОЧИСТИТИ"** скидає всі налаштування та приховує результат та інструкцію.</li>
+        </ol>
+        <p>Для завантаження програми як автономного файлу натисніть кнопку нижче.</p>
+        <button id="download-btn" onclick="downloadCode()">💾 Завантажити HTML-файл</button>
+    </div>
+    
     <div class="result" id="result-output">
         <h3 id="result-title"></h3>
         <table>
@@ -225,25 +286,21 @@
             "AEGL2": [ { time: 10, conc: 0.0072 }, { time: 30, conc: 0.0042 }, { time: 60, conc: 0.0029 }, { time: 240, conc: 0.0015 }, { time: 480, conc: 0.0010 } ],
             "AEGL3": [ { time: 10, conc: 0.029 }, { time: 30, conc: 0.015 }, { time: 60, conc: 0.010 }, { time: 240, conc: 0.0052 }, { time: 480, conc: 0.0038 } ]
         },
-        // --- ОНОВЛЕНО ---
         "Фосген (CG)": {
             "AEGL1": NR_DATA, // Не рекомендовано (NR)
             "AEGL2": [ { time: 10, conc: 2.43 }, { time: 30, conc: 2.43 }, { time: 60, conc: 1.21 }, { time: 240, conc: 0.32 }, { time: 480, conc: 0.16 } ],
             "AEGL3": [ { time: 10, conc: 14.57 }, { time: 30, conc: 6.07 }, { time: 60, conc: 3.03 }, { time: 240, conc: 0.81 }, { time: 480, conc: 0.36 } ]
         },
-        // --- ОНОВЛЕНО ---
         "Синильна кислота (HCN)": {
             "AEGL1": [ { time: 10, conc: 2.76 }, { time: 30, conc: 2.76 }, { time: 60, conc: 2.21 }, { time: 240, conc: 1.4 }, { time: 480, conc: 1.11 } ],
             "AEGL2": [ { time: 10, conc: 18.78 }, { time: 30, conc: 11.05 }, { time: 60, conc: 7.85 }, { time: 240, conc: 3.87 }, { time: 480, conc: 2.76 } ],
             "AEGL3": [ { time: 10, conc: 29.84 }, { time: 30, conc: 23.21 }, { time: 60, conc: 16.76 }, { time: 240, conc: 9.50 }, { time: 480, conc: 7.29 } ]
         },
-        // --- ОНОВЛЕНО (ПРИБРАНО "СІРЧАНИЙ") ---
         "Іприт (HD)": {
             "AEGL1": [ { time: 10, conc: 0.40 }, { time: 30, conc: 0.13 }, { time: 60, conc: 0.067 }, { time: 240, conc: 0.017 }, { time: 480, conc: 0.0083 } ],
             "AEGL2": [ { time: 10, conc: 0.60 }, { time: 30, conc: 0.20 }, { time: 60, conc: 0.10 }, { time: 240, conc: 0.025 }, { time: 480, conc: 0.013 } ],
             "AEGL3": [ { time: 10, conc: 3.9 }, { time: 30, conc: 2.7 }, { time: 60, conc: 2.1 }, { time: 240, conc: 0.53 }, { time: 480, conc: 0.27 } ]
         },
-        // --- ОНОВЛЕНО ---
         "Адамсіт (DM)": {
             "AEGL1": [ { time: 10, conc: 0.20 }, { time: 30, conc: 0.041 }, { time: 60, conc: 0.016 }, { time: 240, conc: 0.0022 }, { time: 480, conc: 0.00083 } ],
             "AEGL2": [ { time: 10, conc: 9.7 }, { time: 30, conc: 6.8 }, { time: 60, conc: 2.6 }, { time: 240, conc: 0.36 }, { time: 480, conc: 0.14 } ],
@@ -295,6 +352,7 @@
         const chemicalName = document.getElementById('chemical-select').value;
         const aeglLevel = document.getElementById('aegl-level-select').value;
         const resultOutput = document.getElementById('result-output');
+        const manualSection = document.getElementById('manual-section');
         const concentrationRow = document.getElementById('concentration-row');
         const timeRow = document.getElementById('time-row');
 
@@ -305,6 +363,10 @@
         }
 
         const data = AEGL_DATA[chemicalName][aeglLevel];
+
+        // Приховуємо інструкцію, якщо завантажуються дані
+        manualSection.style.display = 'none';
+        document.getElementById('manual-btn').textContent = 'ІНСТРУКЦІЯ';
 
         // Очищення та встановлення заголовків
         concentrationRow.innerHTML = '';
@@ -355,7 +417,40 @@
         resultOutput.style.display = 'block';
     }
 
-    // ФУНКЦІЯ ОЧИЩЕННЯ
+    // НОВА ФУНКЦІЯ: Перемикання відображення інструкції
+    function toggleManual() {
+        const manualSection = document.getElementById('manual-section');
+        const resultOutput = document.getElementById('result-output');
+        
+        // Перемикання видимості
+        if (manualSection.style.display === 'block') {
+            manualSection.style.display = 'none';
+            document.getElementById('manual-btn').textContent = 'ІНСТРУКЦІЯ';
+        } else {
+            manualSection.style.display = 'block';
+            resultOutput.style.display = 'none'; // Приховуємо результат при відкритті інструкції
+            document.getElementById('manual-btn').textContent = 'ПРИХОВАТИ ІНСТРУКЦІЮ';
+        }
+    }
+
+    // НОВА ФУНКЦІЯ: Завантаження коду HTML-файлу
+    function downloadCode() {
+        const htmlContent = document.documentElement.outerHTML;
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'AEGL_Calculator.html'; 
+        
+        document.body.appendChild(a);
+        a.click();
+        
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ФУНКЦІЯ ОЧИЩЕННЯ (Оновлено для приховування інструкції)
     function clearForm() {
         document.getElementById('chemical-select').value = "";
         document.getElementById('aegl-level-select').value = "AEGL1";
@@ -363,6 +458,10 @@
         document.getElementById('concentration-row').innerHTML = '';
         document.getElementById('time-row').innerHTML = '';
         document.getElementById('aegl-table-body').className = '';
+        
+        // Додано: приховуємо інструкцію при очищенні
+        document.getElementById('manual-section').style.display = 'none';
+        document.getElementById('manual-btn').textContent = 'ІНСТРУКЦІЯ';
     }
 
     // Ініціалізація даних при завантаженні сторінки
