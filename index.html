@@ -363,6 +363,10 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
         return (value !== undefined && value !== null && value !== "") ? value : "—";
     }
 
+    function getName(record, key) {
+        return (record && record.name) ? record.name : key;
+    }
+
     function updateChemicalCard() {
         const toxicSelect = document.getElementById("toxic-select");
         const hazardSelect = document.getElementById("hazard-select");
