@@ -190,18 +190,18 @@ th{background:#007bff;color:#fff;font-weight:bold}
 </head>
 <body>
 <div class="container">
-<h2>Рівні небезпечного впливу: AEGL-1, AEGL-2, AEGL-3</h2>
+<h2>☣️ Рівні небезпечного впливу: AEGL-1, AEGL-2, AEGL-3</h2>
 
 <div class="controls-grid">
   <div class="database-box toxic">
-    <div class="database-title">БОЙОВІ ОТРУЙНІ РЕЧОВИНИ</div>
+    <div class="database-title">☣️ ОТРУЙНІ РЕЧОВИНИ</div>
     <div class="database-note">Офіційна база AEGL</div>
     <label for="toxic-select">Оберіть отруйну речовину:</label>
     <select id="toxic-select"><option value="">--- Оберіть отруйну речовину ---</option></select>
   </div>
 
   <div class="database-box hazard">
-    <div class="database-title">НЕБЕЗПЕЧНІ ХІМІЧНІ РЕЧОВИНИ</div>
+    <div class="database-title">⚠️ НЕБЕЗПЕЧНІ ХІМІЧНІ РЕЧОВИНИ</div>
     <div class="database-note">Офіційна база AEGL</div>
     <label for="hazard-select">Оберіть небезпечну хімічну речовину:</label>
     <select id="hazard-select"><option value="">--- Оберіть небезпечну хімічну речовину ---</option></select>
@@ -260,7 +260,7 @@ th{background:#007bff;color:#fff;font-weight:bold}
         <h4>1. Вибір речовини</h4>
         <p>
             У верхній частині форми оберіть речовину з відповідної бази:
-            <b>БОЙОВІ ОТРУЙНІ РЕЧОВИНИ</b> або <b>НЕБЕЗПЕЧНІ ХІМІЧНІ РЕЧОВИНИ</b>.
+            <b>ОТРУЙНІ РЕЧОВИНИ</b> або <b>НЕБЕЗПЕЧНІ ХІМІЧНІ РЕЧОВИНИ</b>.
             Після вибору автоматично відображається інформаційна картка речовини
             та її значення AEGL.
         </p>
@@ -486,6 +486,194 @@ function getName(item,key){
   return item?.name ?? item?.Name ?? item?.chemical ?? item?.chemicalName ?? key;
 }
 
+const UKRAINIAN_DISPLAY_NAMES = {
+  "Hydrogen cyanide": "Синильна кислота (Hydrogen cyanide)",
+  "Phosgene": "Фосген (Phosgene)",
+  "Agent GA (Tabun)": "Табун (Agent GA / Tabun)",
+  "Agent GD (Soman)": "Зоман (Agent GD / Soman)",
+  "Agent GB (Sarin)": "Зарин (Agent GB / Sarin)",
+  "GF Agent": "Отруйна речовина GF (GF Agent)",
+  "Sulfur Mustard": "Іприт (Sulfur Mustard)",
+  "Lewisite 1": "Льюїзит-1 (Lewisite 1)",
+  "BZ": "БЗ (BZ)",
+  "Agent VX": "VX (Agent VX)",
+  "Magnesium aluminum phosphide": "Фосфід магнію-алюмінію (Magnesium aluminum phosphide)",
+  "Carbon tetrachloride": "Тетрахлорметан (Carbon tetrachloride)",
+  "1,1- Dimethyl hydrazine": "1,1-Диметилгідразин (1,1- Dimethyl hydrazine)",
+  "Methyl hydrazine": "Метилгідразин (Methyl hydrazine)",
+  "Aniline": "Анілін (Aniline)",
+  "Chloroform": "Хлороформ (Chloroform)",
+  "N,N-Dimethylformamide": "N,N-Диметилформамід (N,N-Dimethylformamide)",
+  "Methyl bromide": "Бромистий метил (Methyl bromide)",
+  "Methyl chloride": "Хлористий метил (Methyl chloride)",
+  "Methyl mercaptan": "Метилмеркаптан (Methyl mercaptan)",
+  "Propane": "Пропан (Propane)",
+  "Vinyl chloride": "Вінілхлорид (Vinyl chloride)",
+  "Acetonitrile": "Ацетонітрил (Acetonitrile)",
+  "Ethyl mercaptan": "Етилмеркаптан (Ethyl mercaptan)",
+  "Carbon disulfide": "Сірковуглець (Carbon disulfide)",
+  "Ethylene oxide": "Оксид етилену (Ethylene oxide)",
+  "Methyl dichlorosilane": "Метилдихлорсилан (Methyl dichlorosilane)",
+  "Propylenimine": "Пропіленімін (Propylenimine)",
+  "Propylene oxide": "Оксид пропілену (Propylene oxide)",
+  "Trimethyl chlorosilane": "Триметилхлорсилан (Trimethyl chlorosilane)",
+  "Dimethyl dichlorosilane": "Диметилдихлорсилан (Dimethyl dichlorosilane)",
+  "Methyl trichlorosilane": "Метилтрихлорсилан (Methyl trichlorosilane)",
+  "Acetone cyanohydrin": "Ацетонціангідрин (Acetone cyanohydrin)",
+  "Vinyl trichlorosilane": "Вінілтрихлорсилан (Vinyl trichlorosilane)",
+  "Isobutyronitrile": "Ізобутиронітрил (Isobutyronitrile)",
+  "Methacrylaldehyde": "Метакрилальдегід (Methacrylaldehyde)",
+  "Methyl ethyl ketone": "Метилетилкетон (Methyl ethyl ketone)",
+  "Chloroacetone": "Хлорацетон (Chloroacetone)",
+  "Monochloroacetic acid": "Монохлороцтова кислота (Monochloroacetic acid)",
+  "Peracetic Acid": "Надоцтова кислота (Peracetic Acid)",
+  "Methyl chloroformate": "Метилхлороформіат (Methyl chloroformate)",
+  "Diphenyl dichlorosilane": "Дифенілдихлорсилан (Diphenyl dichlorosilane)",
+  "2,6-Toluenediisocyanate": "2,6-Толуїлендіізоціанат (2,6-Toluenediisocyanate)",
+  "1,2,4-Trimethylbenzene": "1,2,4-Триметилбензен (1,2,4-Trimethylbenzene)",
+  "Trichlorophenysilane": "Трихлорфенілсилан (Trichlorophenysilane)",
+  "Benzonitrile": "Бензонітрил (Benzonitrile)",
+  "Phenyl isocyanate": "Фенілізоціанат (Phenyl isocyanate)",
+  "Epichlorohydrin": "Епіхлоргідрин (Epichlorohydrin)",
+  "Butane": "Бутан (Butane)",
+  "Acrolein": "Акролеїн (Acrolein)",
+  "Ethylene chlorohydrin (2-Chloroethanol)": "Етиленхлоргідрин (2-хлоретанол) (Ethylene chlorohydrin (2-Chloroethanol))",
+  "Allyl Amine": "Аліламін (Allyl Amine)",
+  "Propionitrile": "Пропіонітрил (Propionitrile)",
+  "Acrylonitrile": "Акрилонітрил (Acrylonitrile)",
+  "Chloroacetonitrile": "Хлорацетонітрил (Chloroacetonitrile)",
+  "Ethylene diamine": "Етилендіамін (Ethylene diamine)",
+  "Allyl alcohol": "Аліловий спирт (Allyl alcohol)",
+  "Propargyl alcohol": "Пропаргіловий спирт (Propargyl alcohol)",
+  "Chloroacetaldehyde": "Хлорацетальдегід (Chloroacetaldehyde)",
+  "Chloromethyl methyl ether": "Хлорметилметиловий ефір (Chloromethyl methyl ether)",
+  "Allyl trichlorosilane": "Алілтрихлорсилан (Allyl trichlorosilane)",
+  "Amy ltrichlorosilane": "Амілтрихлорсилан (Amy ltrichlorosilane)",
+  "Vinyl acetate": "Вінілацетат (Vinyl acetate)",
+  "Isopropyl chloroformate": "Ізопропілхлороформіат (Isopropyl chloroformate)",
+  "1,3,5-Trimethylbenzene (Mesitylene)": "1,3,5-Триметилбензен (мезитилен) (1,3,5-Trimethylbenzene (Mesitylene))",
+  "Toluene": "Толуен (Toluene)",
+  "Chlorobenzene": "Хлорбензен (Chlorobenzene)",
+  "Cyclohexylamine": "Циклогексиламін (Cyclohexylamine)",
+  "Phenol": "Фенол (Phenol)",
+  "Phenyl mercaptan": "Тіофенол (Phenyl mercaptan)",
+  "Propyl chloroformate": "Пропілхлороформіат (Propyl chloroformate)",
+  "Malononitrile": "Малонітрил (Malononitrile)",
+  "Ethyl isocyanate": "Етилізоціанат (Ethyl isocyanate)",
+  "Furan": "Фуран (Furan)",
+  "Hexane": "Гексан (Hexane)",
+  "Piperidine": "Піперидин (Piperidine)",
+  "n-Butyl isocyanate": "н-Бутилізоціанат (n-Butyl isocyanate)",
+  "Octadecyl trichlorosilane": "Октадецилтрихлорсилан (Octadecyl trichlorosilane)",
+  "Ethyl trichlorosilane": "Етилтрихлорсилан (Ethyl trichlorosilane)",
+  "Tetrafluoroethylene": "Тетрафторетилен (Tetrafluoroethylene)",
+  "trans-Crotonaldehyde": "транс-Кротональдегід (trans-Crotonaldehyde)",
+  "Methanesulfonyl chloride": "Метансульфонілхлорид (Methanesulfonyl chloride)",
+  "Methylvinyl dichlorosilane": "Метилвінілдихлорсилан (Methylvinyl dichlorosilane)",
+  "Methacrylonitrile": "Метакрилонітрил (Methacrylonitrile)",
+  "Propyl trichlorosilane": "Пропілтрихлорсилан (Propyl trichlorosilane)",
+  "t-Octyl mercaptan": "т-Октилмеркаптан (t-Octyl mercaptan)",
+  "Sodium cyanide": "Ціанід натрію (Sodium cyanide)",
+  "Potassium cyanide": "Ціанід калію (Potassium cyanide)",
+  "Ethylenimine": "Етиленімін (Ethylenimine)",
+  "cis-1,2-Dichloroethylene": "цис-1,2-Дихлоретилен (cis-1,2-Dichloroethylene)",
+  "cis- and trans-1,2-Dichloroethylene": "цис- і транс-1,2-Дихлоретилен (cis- and trans-1,2-Dichloroethylene)",
+  "Hydrazine": "Гідразин (Hydrazine)",
+  "Carbonyl fluoride": "Карбонілфторид (Carbonyl fluoride)",
+  "Cyanogen": "Ціан (Cyanogen)",
+  "Ketene": "Кетен (Ketene)",
+  "Benzyl chloroformate": "Бензилхлороформіат (Benzyl chloroformate)",
+  "Tetranitromethane": "Тетранитрометан (Tetranitromethane)",
+  "1,2,3-Trimethylbenzene": "1,2,3-Триметилбензен (1,2,3-Trimethylbenzene)",
+  "1,2-Dimethyl hydrazine": "1,2-Диметилгідразин (1,2-Dimethyl hydrazine)",
+  "Ethyl chloroformate": "Етилхлороформіат (Ethyl chloroformate)",
+  "Bis-chloromethyl ether": "Біс(хлорметиловий) ефір (Bis-chloromethyl ether)",
+  "Isobutyl chloroformate": "Ізобутилхлороформіат (Isobutyl chloroformate)",
+  "Methyl isothiocyanate": "Метилізотіоціанат (Methyl isothiocyanate)",
+  "2,4-Toluene Diisocyanate": "2,4-Толуїлендіізоціанат (2,4-Toluene Diisocyanate)",
+  "Calcium cyanide": "Ціанід кальцію (Calcium cyanide)",
+  "n-Butyl chloroformate": "н-Бутилхлороформіат (n-Butyl chloroformate)",
+  "Perchloromethyl mercaptan": "Перхлорметилмеркаптан (Perchloromethyl mercaptan)",
+  "Bromoacetone": "Бромацетон (Bromoacetone)",
+  "Methyl isocyanate": "Метилізоціанат (Methyl isocyanate)",
+  "Carbon monoxide": "Чадний газ (Carbon monoxide)",
+  "Diketene": "Дикетен (Diketene)",
+  "Tetramethoxy silane": "Тетраметоксисилан (Tetramethoxy silane)",
+  "Hexafluoroacetone": "Гексафторацетон (Hexafluoroacetone)",
+  "HFC 134A": "HFC-134A (HFC 134A)",
+  "Hexyltrichlorosilane": "Гексилтрихлорсилан (Hexyltrichlorosilane)",
+  "Methyl chlorosilane": "Метилхлорсилан (Methyl chlorosilane)",
+  "Dimethyl chlorosilane": "Диметилхлорсилан (Dimethyl chlorosilane)",
+  "Calcium phosphide": "Фосфід кальцію (Calcium phosphide)",
+  "Zinc phosphide": "Фосфід цинку (Zinc phosphide)",
+  "Xylenes": "Ксилоли (Xylenes)",
+  "Ethylphosphorodichloridate": "Етилфосфордихлоридат (Ethylphosphorodichloridate)",
+  "Chloromethyl trichlorosilane": "Хлорметилтрихлорсилан (Chloromethyl trichlorosilane)",
+  "HCFC 141b": "HCFC-141b (HCFC 141b)",
+  "Diethyl dichlorosilane": "Діетилдихлорсилан (Diethyl dichlorosilane)",
+  "Phenyl chloroformate": "Фенілхлороформіат (Phenyl chloroformate)",
+  "Trimethoxysilane": "Триметоксисилан (Trimethoxysilane)",
+  "Tear Gas": "Сльозогінний газ (Tear Gas)",
+  "Allyl chloroformate": "Алілхлороформіат (Allyl chloroformate)",
+  "Ethylchlorothioformate": "Етилхлоротіоформіат (Ethylchlorothioformate)",
+  "Cyclohexyl isocyanate": "Циклогексилізоціанат (Cyclohexyl isocyanate)",
+  "Trimethylacetyl chloride": "Триметилацетилхлорид (Trimethylacetyl chloride)",
+  "Dichlorosilane": "Дихлорсилан (Dichlorosilane)",
+  "cis-Crotonaldehyde": "цис-Кротональдегід (cis-Crotonaldehyde)",
+  "Dodecyl trichlorosilane": "Додецилтрихлорсилан (Dodecyl trichlorosilane)",
+  "Octyl trichlorosilane": "Октилтрихлорсилан (Octyl trichlorosilane)",
+  "Nonyl trichlorosilane": "Нонілтрихлорсилан (Nonyl trichlorosilane)",
+  "Propylene Glycol Dinitrate (main component of Otto Fuel 106602-80-6)": "Динітрат пропіленгліколю (основний компонент Otto Fuel 106602-80-6) (Propylene Glycol Dinitrate (main component of Otto Fuel 106602-80-6))",
+  "Sulfur Dioxide": "Діоксид сірки (Sulfur Dioxide)",
+  "Butyl trichlorosilane": "Бутилтрихлорсилан (Butyl trichlorosilane)",
+  "Perchloryl fluoride": "Перхлорилфторид (Perchloryl fluoride)",
+  "Boron trifluoride": "Трифторид бору (Boron trifluoride)",
+  "Hydrogen chloride": "Хлороводень (Hydrogen chloride)",
+  "Hydrogen fluoride": "Фтороводень (Hydrogen fluoride)",
+  "Ammonia": "Аміак (Ammonia)",
+  "Nitric Acid": "Азотна кислота (Nitric Acid)",
+  "Phosphorus Trichloride": "Трихлорид фосфору (Phosphorus Trichloride)",
+  "Bromine": "Бром (Bromine)",
+  "Fluorine": "Фтор (Fluorine)",
+  "Chlorine": "Хлор (Chlorine)",
+  "Hydrogen sulfide": "Сірководень (Hydrogen sulfide)",
+  "Hydrogen selenide": "Селеноводень (Hydrogen selenide)",
+  "Oxygen difluoride": "Дифторид кисню (Oxygen difluoride)",
+  "Tellurium hexafluoride": "Гексафторид телуру (Tellurium hexafluoride)",
+  "Uranium hexafluoride": "Гексафторид урану (Uranium hexafluoride)",
+  "Arsine": "Арсин (Arsine)",
+  "Bromine trifluoride": "Трифторид брому (Bromine trifluoride)",
+  "Bromine pentafluoride": "Пентафторид брому (Bromine pentafluoride)",
+  "Chlorine trifluoride": "Трифторид хлору (Chlorine trifluoride)",
+  "Sulfuryl chloride": "Хлорид сіркил (Sulfuryl chloride)",
+  "Phosphine": "Фосфін (Phosphine)",
+  "Trichlorosilane": "Трихлорсилан (Trichlorosilane)",
+  "Phosphorus oxychloride": "Оксихлорид фосфору (Phosphorus oxychloride)",
+  "Tetrachlorosilane": "Тетрахлорсилан (Tetrachlorosilane)",
+  "Hydrogen Bromide": "Бромоводень (Hydrogen Bromide)",
+  "Chlorine dioxide": "Діоксид хлору (Chlorine dioxide)",
+  "Nitric oxide": "Оксид азоту (Nitric oxide)",
+  "Nitrogen dioxide": "Діоксид азоту (Nitrogen dioxide)",
+  "Boron tribromide": "Трибромід бору (Boron tribromide)",
+  "Nitrogen Tetroxide ppm": "Тетраоксид азоту (Nitrogen Tetroxide ppm)",
+  "Magnesium phosphide": "Фосфід магнію (Magnesium phosphide)",
+  "Sodium phosphide": "Фосфід натрію (Sodium phosphide)",
+  "Strontium phosphide": "Фосфід стронцію (Strontium phosphide)",
+  "Nickel carbonyl": "Карбоніл нікелю (Nickel carbonyl)",
+  "Iron pentacarbonyl": "Пентакарбоніл заліза (Iron pentacarbonyl)",
+  "Chlorine pentafluoride": "Пентафторид хлору (Chlorine pentafluoride)",
+  "Bromine chloride": "Хлорид брому (Bromine chloride)",
+  "sec-Butyl chloroformate": "сек-Бутилхлороформіат (sec-Butyl chloroformate)",
+  "Diborane": "Диборан (Diborane)",
+  "Pentaborane": "Пентаборан (Pentaborane)",
+  "Potassium phosphide": "Фосфід калію (Potassium phosphide)",
+  "Aluminum phosphide": "Фосфід алюмінію (Aluminum phosphide)",
+  "2-Ethylhexylchloroformate": "2-Етилгексилхлороформіат (2-Ethylhexylchloroformate)",
+  "Trichlorophenylsilane": "Трихлорфенілсилан (Trichlorophenylsilane)",
+  "Jet Fuels (JP-5 and JP-8)": "Реактивні палива (JP-5 та JP-8) (Jet Fuels (JP-5 and JP-8))",
+  "(HFE-7100) Methyl nonafluorobutyl ether (40%) and Methyl": "(HFE-7100) Метилнонафторобутиловий ефір (40%) та метил (HFE-7100) Methyl nonafluorobutyl ether (40%) and Methyl)"
+};
+
 function populateSelect(selectId,data){
   const select=document.getElementById(selectId);
   Object.entries(data)
@@ -493,7 +681,7 @@ function populateSelect(selectId,data){
     .forEach(([key,item])=>{
       const option=document.createElement('option');
       option.value=key;
-      option.textContent=getName(item,key);
+      option.textContent=UKRAINIAN_DISPLAY_NAMES[getName(item,key)] || getName(item,key);
       select.appendChild(option);
     });
 }
