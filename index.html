@@ -149,7 +149,6 @@ th{background:#007bff;color:#fff;font-weight:bold}
 <h3>📖 ДОВІДКА</h3>
 <ol>
 <li>Оберіть речовину лише в одній із двох баз даних.</li>
-<li>Оберіть необхідний рівень AEGL.</li>
 <li>Натисніть «ЗАВАНТАЖИТИ ДАНІ».</li>
 <li>Відображаються значення для 10, 30, 60, 240 та 480 хвилин.</li>
 <li><b>NR</b> означає, що значення AEGL у джерелі не рекомендовано або відсутнє.</li>
@@ -160,12 +159,19 @@ th{background:#007bff;color:#fff;font-weight:bold}
 <h3 id="result-title"></h3>
 <table>
 <thead>
-<tr><th colspan="5" id="aegl-description-header"></th></tr>
-<tr><th>10 хв</th><th>30 хв</th><th>60 хв</th><th>4 год (240 хв)</th><th>8 год (480 хв)</th></tr>
+<tr>
+<th>Рівень AEGL</th>
+<th>10 хв</th>
+<th>30 хв</th>
+<th>60 хв</th>
+<th>4 год (240 хв)</th>
+<th>8 год (480 хв)</th>
+</tr>
 </thead>
 <tbody id="aegl-table-body">
-<tr id="concentration-row"></tr>
-<tr id="time-row"></tr>
+<tr id="aegl1-row"><th class="aegl1-bg">AEGL-1</th></tr>
+<tr id="aegl2-row"><th class="aegl2-bg">AEGL-2</th></tr>
+<tr id="aegl3-row"><th class="aegl3-bg">AEGL-3</th></tr>
 </tbody>
 </table>
 <div class="meta" id="meta-info"></div>
