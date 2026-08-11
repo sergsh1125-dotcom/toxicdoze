@@ -75,6 +75,96 @@ th{background:#007bff;color:#fff;font-weight:bold}
             color: #222;
         }
 
+    
+        .measurement-section {
+            display: none;
+            margin: 20px 0;
+            padding: 18px;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            background-color: #f3fff6;
+        }
+        .measurement-section h3 {
+            margin-top: 0;
+            color: #1e7e34;
+            border-bottom: 1px dashed #28a745;
+            padding-bottom: 8px;
+        }
+        .measurement-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        @media (min-width: 600px) {
+            .measurement-grid {
+                grid-template-columns: 1.2fr 1fr 1fr;
+                align-items: end;
+            }
+        }
+        .measurement-field label {
+            margin-bottom: 7px;
+        }
+        .measurement-field input,
+        .measurement-field select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #bbb;
+            box-sizing: border-box;
+            font-size: 1em;
+            background: white;
+        }
+        .unit-switch {
+            display: flex;
+            gap: 8px;
+        }
+        .unit-switch label {
+            flex: 1;
+            margin: 0;
+            cursor: pointer;
+        }
+        .unit-switch input {
+            display: none;
+        }
+        .unit-switch span {
+            display: block;
+            text-align: center;
+            padding: 11px 8px;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            background: white;
+            font-weight: 600;
+        }
+        .unit-switch input:checked + span {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        .measurement-button {
+            margin-top: 15px;
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 6px;
+            background: #28a745;
+            color: white;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .measurement-result {
+            display: none;
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            background: #fff;
+            border: 1px solid #ccc;
+        }
+        .measurement-result strong {
+            display: block;
+            margin-bottom: 6px;
+        }
+
     </style>
 </head>
 <body>
@@ -154,6 +244,50 @@ th{background:#007bff;color:#fff;font-weight:bold}
 <li><b>NR</b> означає, що значення AEGL у джерелі не рекомендовано або відсутнє.</li>
 </ol>
 </div>
+
+
+    <div class="measurement-section" id="measurement-section">
+        <h3>📏 ФАКТИЧНА КОНЦЕНТРАЦІЯ</h3>
+
+        <div class="measurement-grid">
+            <div class="measurement-field">
+                <label>Одиниця вимірювання:</label>
+                <div class="unit-switch">
+                    <label>
+                        <input type="radio" name="measurement-unit" value="mg_m3" checked>
+                        <span>мг/м³</span>
+                    </label>
+                    <label>
+                        <input type="radio" name="measurement-unit" value="ppm">
+                        <span>ppm</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="measurement-field">
+                <label for="actual-concentration">Фактична концентрація:</label>
+                <input id="actual-concentration" type="number" min="0" step="any"
+                       placeholder="Введіть значення">
+            </div>
+
+            <div class="measurement-field">
+                <label for="exposure-time">Час впливу:</label>
+                <select id="exposure-time">
+                    <option value="10">10 хв</option>
+                    <option value="30" selected>30 хв</option>
+                    <option value="60">60 хв</option>
+                    <option value="240">4 год (240 хв)</option>
+                    <option value="480">8 год (480 хв)</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="measurement-button" onclick="evaluateActualConcentration()">
+            ВИЗНАЧИТИ РІВЕНЬ ВПЛИВУ
+        </button>
+
+        <div class="measurement-result" id="measurement-result"></div>
+    </div>
 
 <div class="result" id="result-output">
 <h3 id="result-title"></h3>
@@ -351,6 +485,7 @@ function toggleManual(){
 
 function clearForm(){
   resetChemicalCard();
+        resetMeasurementSection();
   document.getElementById('toxic-select').value='';
   document.getElementById('hazard-select').value='';
   document.getElementById('result-output').style.display='none';
@@ -466,6 +601,211 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
     loadAEGLData();
   });
 });
+
+    // =========================================================
+    // ФАКТИЧНА КОНЦЕНТРАЦІЯ: мг/м³ ↔ ppm
+    // =========================================================
+    function selectedRecordForMeasurement() {
+        const name = getSelectedChemicalName();
+        return name ? findChemicalRecord(name) : null;
+    }
+
+    function getMeasurementUnit() {
+        const checked = document.querySelector('input[name="measurement-unit"]:checked');
+        return checked ? checked.value : "mg_m3";
+    }
+
+    function getExposureIndex(record, minutes) {
+        const times = record && Array.isArray(record.times_min)
+            ? record.times_min
+            : [10, 30, 60, 240, 480];
+        const exact = times.indexOf(Number(minutes));
+        return exact >= 0 ? exact : -1;
+    }
+
+    function molecularWeightFromRecord(record) {
+        const candidates = [
+            record && record.molecular_weight,
+            record && record.mw,
+            record && record.MW
+        ];
+        for (const value of candidates) {
+            const n = Number(value);
+            if (Number.isFinite(n) && n > 0) return n;
+        }
+        return null;
+    }
+
+    // AEGL data in the current database are compared in the unit
+    // represented by record.unit_display/unit_source.
+    // Conversion is performed only when the source unit is unambiguous.
+    function normalizeUnit(record) {
+        const text = String(
+            (record && (record.unit_display || record.unit_source)) || ""
+        ).toLowerCase();
+
+        if (text.includes("ppm")) return "ppm";
+        if (text.includes("мг/м") || text.includes("mg/m3") || text.includes("mg/m³")) {
+            return "mg_m3";
+        }
+        return null;
+    }
+
+    function convertConcentration(value, fromUnit, toUnit, mw) {
+        if (fromUnit === toUnit) return value;
+        if (!Number.isFinite(mw) || mw <= 0) return null;
+
+        // Ideal-gas conversion at approximately 25 °C and 1 atm:
+        // mg/m³ = ppm × MW / 24.45
+        if (fromUnit === "ppm" && toUnit === "mg_m3") {
+            return value * mw / 24.45;
+        }
+        if (fromUnit === "mg_m3" && toUnit === "ppm") {
+            return value * 24.45 / mw;
+        }
+        return null;
+    }
+
+    function evaluateActualConcentration() {
+        const record = selectedRecordForMeasurement();
+        const result = document.getElementById("measurement-result");
+        const section = document.getElementById("measurement-section");
+
+        if (!record) {
+            result.style.display = "block";
+            result.innerHTML = "<strong>Речовину не обрано.</strong>";
+            return;
+        }
+
+        const input = Number(document.getElementById("actual-concentration").value);
+        const unit = getMeasurementUnit();
+        const minutes = Number(document.getElementById("exposure-time").value);
+
+        if (!Number.isFinite(input) || input < 0) {
+            result.style.display = "block";
+            result.innerHTML = "<strong>Введіть коректну фактичну концентрацію.</strong>";
+            return;
+        }
+
+        const aeglUnit = normalizeUnit(record);
+        if (!aeglUnit) {
+            result.style.display = "block";
+            result.innerHTML =
+                "<strong>Не вдалося однозначно визначити одиницю AEGL у базі.</strong>" +
+                "<div>Порівняння не виконано, щоб не змішувати різні одиниці.</div>";
+            return;
+        }
+
+        let comparisonValue = input;
+        let conversionNote = "";
+
+        if (unit !== aeglUnit) {
+            const mw = molecularWeightFromRecord(record);
+            const converted = convertConcentration(input, unit, aeglUnit, mw);
+
+            if (converted === null) {
+                result.style.display = "block";
+                result.innerHTML =
+                    "<strong>Неможливо виконати конвертацію.</strong>" +
+                    "<div>Для цього потрібна молекулярна маса речовини.</div>";
+                return;
+            }
+
+            comparisonValue = converted;
+            conversionNote =
+                `<div>Для порівняння: <b>${formatMeasurementNumber(converted)} ${aeglUnit === "ppm" ? "ppm" : "мг/м³"}</b></div>`;
+        }
+
+        const index = getExposureIndex(record, minutes);
+        if (index < 0) {
+            result.style.display = "block";
+            result.innerHTML =
+                "<strong>Для обраного часу немає відповідного значення AEGL.</strong>";
+            return;
+        }
+
+        const levels = [
+            { key: "AEGL1", label: "AEGL-1" },
+            { key: "AEGL2", label: "AEGL-2" },
+            { key: "AEGL3", label: "AEGL-3" }
+        ];
+
+        const thresholds = levels.map(level => {
+            const values = Array.isArray(record[level.key]) ? record[level.key] : [];
+            const value = values[index];
+            return {
+                ...level,
+                value: Number(value)
+            };
+        });
+
+        const valid = thresholds.filter(x => Number.isFinite(x.value));
+        let classification = "";
+
+        if (!valid.length) {
+            classification = "Для обраної речовини та часу AEGL-значення відсутні.";
+        } else if (comparisonValue < valid[0].value) {
+            classification = "Нижче AEGL-1";
+        } else if (valid.length >= 3 && comparisonValue < valid[1].value) {
+            classification = "На рівні або вище AEGL-1, але нижче AEGL-2";
+        } else if (valid.length >= 3 && comparisonValue < valid[2].value) {
+            classification = "На рівні або вище AEGL-2, але нижче AEGL-3";
+        } else {
+            classification = "На рівні або вище AEGL-3";
+        }
+
+        let rows = thresholds.map(item => {
+            const value = Number.isFinite(item.value)
+                ? `${formatMeasurementNumber(item.value)} ${aeglUnit === "ppm" ? "ppm" : "мг/м³"}`
+                : "NR";
+            return `<div><b>${item.label}:</b> ${value}</div>`;
+        }).join("");
+
+        result.innerHTML =
+            `<strong>Результат для ${minutes} хв: ${classification}</strong>` +
+            `<div>Фактично введено: <b>${formatMeasurementNumber(input)} ${unit === "ppm" ? "ppm" : "мг/м³"}</b></div>` +
+            conversionNote +
+            `<div style="margin-top:8px">${rows}</div>`;
+
+        result.style.display = "block";
+    }
+
+    function formatMeasurementNumber(value) {
+        if (!Number.isFinite(Number(value))) return "—";
+        return Number(value).toPrecision(6).replace(/\.?0+$/, "");
+    }
+
+    function showMeasurementSection() {
+        const section = document.getElementById("measurement-section");
+        if (section) section.style.display = "block";
+    }
+
+    function resetMeasurementSection() {
+        const section = document.getElementById("measurement-section");
+        const input = document.getElementById("actual-concentration");
+        const result = document.getElementById("measurement-result");
+        if (section) section.style.display = "none";
+        if (input) input.value = "";
+        if (result) {
+            result.style.display = "none";
+            result.innerHTML = "";
+        }
+    }
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        ["toxic-select", "hazard-select"].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener("change", function () {
+                    if (typeof updateChemicalCard === "function") updateChemicalCard();
+                    if (typeof loadAEGLData === "function") loadAEGLData();
+                    showMeasurementSection();
+                });
+            }
+        });
+    });
+
 </script>
 </body>
 </html>
