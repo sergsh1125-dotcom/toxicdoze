@@ -382,6 +382,7 @@ function toggleManual(){
 }
 
 function clearForm(){
+        resetChemicalCard();
   document.getElementById('toxic-select').value='';
   document.getElementById('hazard-select').value='';
   document.getElementById('aegl-level-select').value='AEGL1';
@@ -398,48 +399,48 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
 
     // =========================================================
     // КАРТКА ОБРАНОЇ РЕЧОВИНИ
+    // Працює з двома реальними списками: toxic-select / hazard-select
     // =========================================================
     function formatCardValue(value) {
         return (value !== undefined && value !== null && value !== "") ? value : "—";
     }
 
-    function findChemicalRecord(chemicalName) {
-        if (!chemicalName) return null;
-
-        if (window.AEGL_DATABASE_V2 && window.AEGL_DATABASE_V2.toxic) {
-            if (window.AEGL_DATABASE_V2.toxic[chemicalName]) {
-                return window.AEGL_DATABASE_V2.toxic[chemicalName];
-            }
-        }
-
-        if (window.AEGL_DATABASE_V2 && window.AEGL_DATABASE_V2.hazardous) {
-            if (window.AEGL_DATABASE_V2.hazardous[chemicalName]) {
-                return window.AEGL_DATABASE_V2.hazardous[chemicalName];
-            }
-        }
-
-        return null;
-    }
-
     function updateChemicalCard() {
-        const select = document.getElementById("chemical-select");
+        const toxicSelect = document.getElementById("toxic-select");
+        const hazardSelect = document.getElementById("hazard-select");
         const card = document.getElementById("chemical-card");
-        if (!select || !card) return;
 
-        const name = select.value;
-        if (!name) {
+        if (!card) return;
+
+        const toxicKey = toxicSelect ? toxicSelect.value : "";
+        const hazardKey = hazardSelect ? hazardSelect.value : "";
+
+        // Если выбрана ОВ — сбрасываем выбор НХР.
+        if (toxicKey && hazardSelect) {
+            hazardSelect.value = "";
+        }
+
+        // Если выбрана НХР — сбрасываем выбор ОВ.
+        if (hazardKey && toxicSelect) {
+            toxicSelect.value = "";
+        }
+
+        const key = toxicKey || hazardKey;
+        if (!key) {
             card.style.display = "none";
             return;
         }
 
-        const record = findChemicalRecord(name);
+        const db = toxicKey ? TOXIC_AGENTS : HAZARDOUS_CHEMICALS;
+        const record = db[key];
+
         if (!record) {
             card.style.display = "none";
             return;
         }
 
         document.getElementById("chemical-card-title").textContent =
-            record.name || name;
+            getName(record, key);
 
         document.getElementById("card-category").textContent =
             formatCardValue(record.category);
@@ -457,10 +458,7 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
             formatCardValue(record.physical_state);
 
         document.getElementById("card-mw").textContent =
-            record.molecular_weight !== undefined &&
-            record.molecular_weight !== null
-                ? record.molecular_weight
-                : "—";
+            formatCardValue(record.molecular_weight);
 
         const unit = record.unit_source && record.unit_display &&
                      record.unit_source !== record.unit_display
@@ -485,9 +483,15 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        const select = document.getElementById("chemical-select");
-        if (select) {
-            select.addEventListener("change", updateChemicalCard);
+        const toxicSelect = document.getElementById("toxic-select");
+        const hazardSelect = document.getElementById("hazard-select");
+
+        if (toxicSelect) {
+            toxicSelect.addEventListener("change", updateChemicalCard);
+        }
+
+        if (hazardSelect) {
+            hazardSelect.addEventListener("change", updateChemicalCard);
         }
     });
 
