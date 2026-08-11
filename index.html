@@ -95,17 +95,7 @@ th{background:#007bff;color:#fff;font-weight:bold}
     <label for="hazard-select">Оберіть небезпечну хімічну речовину:</label>
     <select id="hazard-select"><option value="">--- Оберіть небезпечну хімічну речовину ---</option></select>
   </div>
-
-  <div class="full">
-    <label for="aegl-level-select">Рівень AEGL:</label>
-    <select id="aegl-level-select">
-      <option value="AEGL1" selected>AEGL-1 (порогові ознаки / легкі ефекти)</option>
-      <option value="AEGL2">AEGL-2 (серйозні наслідки / недієздатність)</option>
-      <option value="AEGL3">AEGL-3 (загроза життю / смерть)</option>
-    </select>
-  </div>
-
-  <div class="button-group">
+<div class="button-group">
     <button id="load-btn" onclick="loadAEGLData()">ЗАВАНТАЖИТИ ДАНІ</button>
     <button id="manual-btn" onclick="toggleManual()">ДОВІДКА</button>
     <button id="clear-btn" onclick="clearForm()">ОЧИСТИТИ</button>
@@ -166,33 +156,20 @@ th{background:#007bff;color:#fff;font-weight:bold}
 </ol>
 </div>
 
-
-    <div class="result" id="result-output">
-        <h3 id="result-title"></h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Рівень AEGL</th>
-                    <th>10 хв</th>
-                    <th>30 хв</th>
-                    <th>60 хв</th>
-                    <th>4 год (240 хв)</th>
-                    <th>8 год (480 хв)</th>
-                </tr>
-            </thead>
-            <tbody id="aegl-table-body">
-                <tr id="aegl1-row">
-                    <th class="aegl1-bg">AEGL-1</th>
-                </tr>
-                <tr id="aegl2-row">
-                    <th class="aegl2-bg">AEGL-2</th>
-                </tr>
-                <tr id="aegl3-row">
-                    <th class="aegl3-bg">AEGL-3</th>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+<div class="result" id="result-output">
+<h3 id="result-title"></h3>
+<table>
+<thead>
+<tr><th colspan="5" id="aegl-description-header"></th></tr>
+<tr><th>10 хв</th><th>30 хв</th><th>60 хв</th><th>4 год (240 хв)</th><th>8 год (480 хв)</th></tr>
+</thead>
+<tbody id="aegl-table-body">
+<tr id="concentration-row"></tr>
+<tr id="time-row"></tr>
+</tbody>
+</table>
+<div class="meta" id="meta-info"></div>
+<div class="source-info" id="source-info"></div>
 </div>
 </div>
 
@@ -262,14 +239,6 @@ function populateSelect(selectId,data){
     });
 }
 
-function resetOther(source){
-  if(source==='toxic') document.getElementById('hazard-select').value="";
-  if(source==='hazard') document.getElementById('toxic-select').value="";
-}
-
-document.getElementById('toxic-select').addEventListener('change',()=>resetOther('toxic'));
-document.getElementById('hazard-select').addEventListener('change',()=>resetOther('hazard'));
-
 function formatConc(value){
   if(value===null || value===undefined || value==="" || Number.isNaN(Number(value))) return "NR";
   const n=Number(value);
@@ -300,80 +269,65 @@ function getValues(item, level){
   });
 }
 
+function getSelectedChemical() {
+  const toxicKey = document.getElementById('toxic-select').value;
+  const hazardKey = document.getElementById('hazard-select').value;
 
-    function getSelectedChemicalName() {
-        const toxic = document.getElementById('toxic-select');
-        const hazardous = document.getElementById('hazard-select');
+  if (toxicKey) return { key: toxicKey, record: TOXIC_AGENTS[toxicKey] };
+  if (hazardKey) return { key: hazardKey, record: HAZARDOUS_CHEMICALS[hazardKey] };
+  return null;
+}
 
-        if (toxic && toxic.value) return toxic.value;
-        if (hazardous && hazardous.value) return hazardous.value;
+function formatAEGLValue(value, record) {
+  if (value === null || value === undefined || value === "" || Number.isNaN(Number(value))) return "NR";
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "NR";
+  let precision = 4;
+  if (Math.abs(n) >= 1) precision = 3;
+  else if (Math.abs(n) < 0.01) precision = 6;
+  return `${n.toFixed(precision).replace(/\.?0+$/,'')} ${record.unit_display || record.unit_source || 'мг/м³'}`;
+}
 
-        const generic = document.getElementById('chemical-select');
-        return generic ? generic.value : '';
+function loadAEGLData(){
+  const selected = getSelectedChemical();
+  const result = document.getElementById('result-output');
+
+  if (!selected || !selected.record) {
+    result.style.display = 'none';
+    return;
+  }
+
+  const record = selected.record;
+  document.getElementById('result-title').textContent =
+    `Порогові показники AEGL для ${record.name || selected.key}`;
+
+  const rows = {
+    AEGL1: document.getElementById('aegl1-row'),
+    AEGL2: document.getElementById('aegl2-row'),
+    AEGL3: document.getElementById('aegl3-row')
+  };
+
+  Object.entries(rows).forEach(([level,row]) => {
+    if (!row) return;
+    while (row.cells.length > 1) row.deleteCell(1);
+
+    const values = Array.isArray(record[level]) ? record[level] : [];
+    for (let i=0; i<5; i++) {
+      const cell = document.createElement('td');
+      const value = values[i];
+      if (value === null || value === undefined || value === "" || Number.isNaN(Number(value))) {
+        cell.textContent = 'NR';
+        cell.classList.add('not-recommended');
+      } else {
+        cell.textContent = formatAEGLValue(value, record);
+        cell.classList.add('concentration-cell');
+      }
+      row.appendChild(cell);
     }
+  });
 
-    function formatAEGLValue(value, record) {
-        const num = Number(value);
-        if (!Number.isFinite(num)) return 'NR';
-
-        let precision = 4;
-        if (Math.abs(num) < 0.01) precision = 6;
-        else if (Math.abs(num) >= 1) precision = 3;
-
-        return `${num.toFixed(precision).replace(/\.?0+$/, '')} ${record.unit_display || 'мг/м³'}`;
-    }
-
-function loadAEGLData() {
-        const chemicalName = getSelectedChemicalName();
-        const resultOutput = document.getElementById('result-output');
-        const manualSection = document.getElementById('manual-section');
-
-        if (!chemicalName) {
-            alert("Будь ласка, оберіть речовину.");
-            resultOutput.style.display = 'none';
-            return;
-        }
-
-        const record = findChemicalRecord(chemicalName);
-        if (!record) {
-            resultOutput.style.display = 'none';
-            return;
-        }
-
-        manualSection.style.display = 'none';
-        document.getElementById('manual-btn').textContent = 'ДОВІДКА';
-
-        document.getElementById('result-title').textContent =
-            `Порогові показники AEGL для ${record.name || chemicalName}`;
-
-        const times = record.times_min || [10, 30, 60, 240, 480];
-
-        ['AEGL1', 'AEGL2', 'AEGL3'].forEach(level => {
-            const row = document.getElementById(level.toLowerCase() + '-row');
-            if (!row) return;
-
-            while (row.cells.length > 1) row.deleteCell(1);
-
-            const values = Array.isArray(record[level]) ? record[level] : [];
-
-            times.forEach((time, index) => {
-                const cell = document.createElement('td');
-                const value = values[index];
-
-                if (value === null || value === undefined || Number.isNaN(value)) {
-                    cell.textContent = 'NR';
-                    cell.classList.add('not-recommended');
-                } else {
-                    cell.textContent = formatAEGLValue(value, record);
-                    cell.classList.add('concentration-cell');
-                }
-
-                row.appendChild(cell);
-            });
-        });
-
-        resultOutput.style.display = 'block';
-    }
+  result.style.display = 'block';
+}
 
 function toggleManual(){
   const manual=document.getElementById('manual-section');
@@ -390,13 +344,10 @@ function toggleManual(){
 }
 
 function clearForm(){
-        resetChemicalCard();
+  resetChemicalCard();
   document.getElementById('toxic-select').value='';
   document.getElementById('hazard-select').value='';
-document.getElementById('result-output').style.display='none';
-  document.getElementById('concentration-row').innerHTML='';
-  document.getElementById('time-row').innerHTML='';
-  document.getElementById('aegl-table-body').className='';
+  document.getElementById('result-output').style.display='none';
   document.getElementById('manual-section').style.display='none';
   document.getElementById('manual-btn').textContent='ДОВІДКА';
 }
@@ -490,18 +441,21 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
     }
 
     document.addEventListener("DOMContentLoaded", function () {
-        const toxicSelect = document.getElementById("toxic-select");
-        const hazardSelect = document.getElementById("hazard-select");
+  const toxicSelect = document.getElementById("toxic-select");
+  const hazardSelect = document.getElementById("hazard-select");
 
-        if (toxicSelect) {
-            toxicSelect.addEventListener("change", updateChemicalCard);
-        }
+  if (toxicSelect) toxicSelect.addEventListener("change", function () {
+    hazardSelect.value = "";
+    updateChemicalCard();
+    loadAEGLData();
+  });
 
-        if (hazardSelect) {
-            hazardSelect.addEventListener("change", updateChemicalCard);
-        }
-    });
-
+  if (hazardSelect) hazardSelect.addEventListener("change", function () {
+    toxicSelect.value = "";
+    updateChemicalCard();
+    loadAEGLData();
+  });
+});
 </script>
 </body>
 </html>
