@@ -164,6 +164,9 @@ th{background:#007bff;color:#fff;font-weight:bold}
             display: block;
             margin-bottom: 6px;
         }
+        .measurement-result.visible {
+            display: block !important;
+        }
 
     </style>
 </head>
@@ -606,8 +609,8 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
     // ФАКТИЧНА КОНЦЕНТРАЦІЯ: мг/м³ ↔ ppm
     // =========================================================
     function selectedRecordForMeasurement() {
-        const name = getSelectedChemicalName();
-        return name ? findChemicalRecord(name) : null;
+        const selected = getSelectedChemical();
+        return selected ? selected.record : null;
     }
 
     function getMeasurementUnit() {
@@ -672,7 +675,7 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
         const section = document.getElementById("measurement-section");
 
         if (!record) {
-            result.style.display = "block";
+            result.style.display = "block"; result.classList.add("visible");
             result.innerHTML = "<strong>Речовину не обрано.</strong>";
             return;
         }
@@ -682,14 +685,14 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
         const minutes = Number(document.getElementById("exposure-time").value);
 
         if (!Number.isFinite(input) || input < 0) {
-            result.style.display = "block";
+            result.style.display = "block"; result.classList.add("visible");
             result.innerHTML = "<strong>Введіть коректну фактичну концентрацію.</strong>";
             return;
         }
 
         const aeglUnit = normalizeUnit(record);
         if (!aeglUnit) {
-            result.style.display = "block";
+            result.style.display = "block"; result.classList.add("visible");
             result.innerHTML =
                 "<strong>Не вдалося однозначно визначити одиницю AEGL у базі.</strong>" +
                 "<div>Порівняння не виконано, щоб не змішувати різні одиниці.</div>";
@@ -704,7 +707,7 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
             const converted = convertConcentration(input, unit, aeglUnit, mw);
 
             if (converted === null) {
-                result.style.display = "block";
+                result.style.display = "block"; result.classList.add("visible");
                 result.innerHTML =
                     "<strong>Неможливо виконати конвертацію.</strong>" +
                     "<div>Для цього потрібна молекулярна маса речовини.</div>";
@@ -718,7 +721,7 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
 
         const index = getExposureIndex(record, minutes);
         if (index < 0) {
-            result.style.display = "block";
+            result.style.display = "block"; result.classList.add("visible");
             result.innerHTML =
                 "<strong>Для обраного часу немає відповідного значення AEGL.</strong>";
             return;
@@ -767,7 +770,7 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
             conversionNote +
             `<div style="margin-top:8px">${rows}</div>`;
 
-        result.style.display = "block";
+        result.style.display = "block"; result.classList.add("visible");
     }
 
     function formatMeasurementNumber(value) {
@@ -788,6 +791,7 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
         if (input) input.value = "";
         if (result) {
             result.style.display = "none";
+            result.classList.remove("visible");
             result.innerHTML = "";
         }
     }
@@ -804,6 +808,28 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
                 });
             }
         });
+    });
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const btn = document.querySelector(".measurement-button");
+        if (btn) {
+            btn.addEventListener("click", function () {
+                try {
+                    evaluateActualConcentration();
+                } catch (err) {
+                    const result = document.getElementById("measurement-result");
+                    if (result) {
+                        result.innerHTML =
+                            "<strong>Помилка розрахунку.</strong><div>" +
+                            String(err.message || err) + "</div>";
+                        result.style.display = "block";
+                        result.classList.add("visible");
+                    }
+                    console.error(err);
+                }
+            });
+        }
     });
 
 </script>
