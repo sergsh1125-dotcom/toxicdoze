@@ -286,7 +286,7 @@ th{background:#007bff;color:#fff;font-weight:bold}
             ВИЗНАЧИТИ РІВЕНЬ ВПЛИВУ
         </button>
 
-        <div class="measurement-result" id="measurement-result" aria-live="polite"></div>
+        <div class="measurement-result" id="measurement-result"></div>
     </div>
 
 <div class="result" id="result-output">
@@ -606,8 +606,8 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
     // ФАКТИЧНА КОНЦЕНТРАЦІЯ: мг/м³ ↔ ppm
     // =========================================================
     function selectedRecordForMeasurement() {
-        const selected = getSelectedChemical();
-        return selected && selected.record ? selected.record : null;
+        const name = getSelectedChemicalName();
+        return name ? findChemicalRecord(name) : null;
     }
 
     function getMeasurementUnit() {
@@ -746,24 +746,12 @@ populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
             classification = "Для обраної речовини та часу AEGL-значення відсутні.";
         } else if (comparisonValue < valid[0].value) {
             classification = "Нижче AEGL-1";
+        } else if (valid.length >= 3 && comparisonValue < valid[1].value) {
+            classification = "На рівні або вище AEGL-1, але нижче AEGL-2";
+        } else if (valid.length >= 3 && comparisonValue < valid[2].value) {
+            classification = "На рівні або вище AEGL-2, але нижче AEGL-3";
         } else {
-            const a1 = thresholds[0].value;
-            const a2 = thresholds[1].value;
-            const a3 = thresholds[2].value;
-
-            if (Number.isFinite(a1) && comparisonValue < a1) {
-                classification = "Нижче AEGL-1";
-            } else if (Number.isFinite(a2) && comparisonValue < a2) {
-                classification = "На рівні або вище AEGL-1, але нижче AEGL-2";
-            } else if (Number.isFinite(a3) && comparisonValue < a3) {
-                classification = "На рівні або вище AEGL-2, але нижче AEGL-3";
-            } else if (Number.isFinite(a3)) {
-                classification = "На рівні або вище AEGL-3";
-            } else if (Number.isFinite(a2)) {
-                classification = "На рівні або вище AEGL-2";
-            } else {
-                classification = "На рівні або вище AEGL-1";
-            }
+            classification = "На рівні або вище AEGL-3";
         }
 
         let rows = thresholds.map(item => {
