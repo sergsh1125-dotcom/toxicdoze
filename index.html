@@ -37,7 +37,45 @@ th{background:#007bff;color:#fff;font-weight:bold}
 .meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:.9em}
 .meta div{padding:7px;background:#fff;border-radius:5px}
 @media(max-width:550px){.meta{grid-template-columns:1fr}}
-</style>
+
+        /* КАРТКА ОБРАНОЇ РЕЧОВИНИ */
+        .chemical-card {
+            display: none;
+            margin: 5px 0 25px 0;
+            padding: 18px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            background: #f8fbff;
+        }
+        .chemical-card h3 {
+            margin: 0 0 14px 0;
+            color: #004d99;
+            border-bottom: 1px dashed #007bff;
+            padding-bottom: 8px;
+        }
+        .chemical-card-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px 20px;
+        }
+        @media (min-width: 600px) {
+            .chemical-card-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .chemical-card-item {
+            padding: 7px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .chemical-card-label {
+            font-weight: 600;
+            color: #555;
+        }
+        .chemical-card-value {
+            color: #222;
+        }
+
+    </style>
 </head>
 <body>
 <div class="container">
@@ -73,6 +111,49 @@ th{background:#007bff;color:#fff;font-weight:bold}
     <button id="clear-btn" onclick="clearForm()">ОЧИСТИТИ</button>
   </div>
 </div>
+
+    <div class="chemical-card" id="chemical-card">
+        <h3 id="chemical-card-title">ІНФОРМАЦІЯ ПРО РЕЧОВИНУ</h3>
+        <div class="chemical-card-grid">
+            <div class="chemical-card-item">
+                <span class="chemical-card-label">Категорія:</span>
+                <span class="chemical-card-value" id="card-category">—</span>
+            </div>
+            <div class="chemical-card-item">
+                <span class="chemical-card-label">CAS:</span>
+                <span class="chemical-card-value" id="card-cas">—</span>
+            </div>
+            <div class="chemical-card-item">
+                <span class="chemical-card-label">Формула:</span>
+                <span class="chemical-card-value" id="card-formula">—</span>
+            </div>
+            <div class="chemical-card-item">
+                <span class="chemical-card-label">UN:</span>
+                <span class="chemical-card-value" id="card-un">—</span>
+            </div>
+            <div class="chemical-card-item">
+                <span class="chemical-card-label">Фізичний стан:</span>
+                <span class="chemical-card-value" id="card-state">—</span>
+            </div>
+            <div class="chemical-card-item">
+                <span class="chemical-card-label">Молекулярна маса:</span>
+                <span class="chemical-card-value" id="card-mw">—</span>
+            </div>
+            <div class="chemical-card-item">
+                <span class="chemical-card-label">Одиниця:</span>
+                <span class="chemical-card-value" id="card-unit">—</span>
+            </div>
+            <div class="chemical-card-item">
+                <span class="chemical-card-label">Статус AEGL:</span>
+                <span class="chemical-card-value" id="card-status">—</span>
+            </div>
+            <div class="chemical-card-item" style="grid-column: 1 / -1;">
+                <span class="chemical-card-label">Джерело:</span>
+                <span class="chemical-card-value" id="card-source">—</span>
+            </div>
+        </div>
+    </div>
+
 
 <div class="manual-section" id="manual-section">
 <h3>📖 ДОВІДКА</h3>
@@ -314,6 +395,102 @@ function clearForm(){
 
 populateSelect('toxic-select',TOXIC_AGENTS);
 populateSelect('hazard-select',HAZARDOUS_CHEMICALS);
+
+    // =========================================================
+    // КАРТКА ОБРАНОЇ РЕЧОВИНИ
+    // =========================================================
+    function formatCardValue(value) {
+        return (value !== undefined && value !== null && value !== "") ? value : "—";
+    }
+
+    function findChemicalRecord(chemicalName) {
+        if (!chemicalName) return null;
+
+        if (window.AEGL_DATABASE_V2 && window.AEGL_DATABASE_V2.toxic) {
+            if (window.AEGL_DATABASE_V2.toxic[chemicalName]) {
+                return window.AEGL_DATABASE_V2.toxic[chemicalName];
+            }
+        }
+
+        if (window.AEGL_DATABASE_V2 && window.AEGL_DATABASE_V2.hazardous) {
+            if (window.AEGL_DATABASE_V2.hazardous[chemicalName]) {
+                return window.AEGL_DATABASE_V2.hazardous[chemicalName];
+            }
+        }
+
+        return null;
+    }
+
+    function updateChemicalCard() {
+        const select = document.getElementById("chemical-select");
+        const card = document.getElementById("chemical-card");
+        if (!select || !card) return;
+
+        const name = select.value;
+        if (!name) {
+            card.style.display = "none";
+            return;
+        }
+
+        const record = findChemicalRecord(name);
+        if (!record) {
+            card.style.display = "none";
+            return;
+        }
+
+        document.getElementById("chemical-card-title").textContent =
+            record.name || name;
+
+        document.getElementById("card-category").textContent =
+            formatCardValue(record.category);
+
+        document.getElementById("card-cas").textContent =
+            formatCardValue(record.cas);
+
+        document.getElementById("card-formula").textContent =
+            formatCardValue(record.formula);
+
+        document.getElementById("card-un").textContent =
+            formatCardValue(record.un_number);
+
+        document.getElementById("card-state").textContent =
+            formatCardValue(record.physical_state);
+
+        document.getElementById("card-mw").textContent =
+            record.molecular_weight !== undefined &&
+            record.molecular_weight !== null
+                ? record.molecular_weight
+                : "—";
+
+        const unit = record.unit_source && record.unit_display &&
+                     record.unit_source !== record.unit_display
+            ? record.unit_source + " / " + record.unit_display
+            : (record.unit_source || record.unit_display);
+
+        document.getElementById("card-unit").textContent =
+            formatCardValue(unit);
+
+        document.getElementById("card-status").textContent =
+            formatCardValue(record.status);
+
+        document.getElementById("card-source").textContent =
+            formatCardValue(record.source);
+
+        card.style.display = "block";
+    }
+
+    function resetChemicalCard() {
+        const card = document.getElementById("chemical-card");
+        if (card) card.style.display = "none";
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const select = document.getElementById("chemical-select");
+        if (select) {
+            select.addEventListener("change", updateChemicalCard);
+        }
+    });
+
 </script>
 </body>
 </html>
